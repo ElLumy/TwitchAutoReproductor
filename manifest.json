@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Twitch Volume & Quality Manager",
+  "version": "1.0.0",
+  "description": "Extensión que gestiona automáticamente el volumen y la calidad de video en Twitch de forma realista",
+  
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  
+  "host_permissions": [
+    "https://www.twitch.tv/*"
+  ],
+  
+  "background": {
+    "service_worker": "background.js"
+},
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Twitch Volume & Quality Manager"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": ["https://www.twitch.tv/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ]
+  
+}

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch Extension Control</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            width: 380px;
+            min-height: 500px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 15px;
+        }
+        
+        .header h1 {
+            font-size: 20px;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header p {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .section h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .config-group {
+            margin-bottom: 15px;
+        }
+        
+        .config-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 5px;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+        
+        input[type="number"], input[type="range"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        input[type="range"] {
+            padding: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            appearance: none;
+            height: 30px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        input[type="range"]::-webkit-slider-track {
+            background: rgba(255, 255, 255, 0.3);
+            height: 4px;
+            border-radius: 2px;
+        }
+        
+        .time-display {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+            text-align: right;
+            margin-top: -5px;
+            margin-bottom: 10px;
+        }
+        
+        .button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .button:last-child {
+            margin-bottom: 0;
+        }
+        
+        .button-primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+        
+        .button-secondary {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+        }
+        
+        .button-warning {
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+            color: white;
+        }
+        
+        .button-test {
+            background: linear-gradient(45deg, #9C27B0, #7B1FA2);
+            color: white;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .button:active {
+            transform: translateY(0);
+        }
+        
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .status.error {
+            border-left-color: #f44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+        
+        .status.warning {
+            border-left-color: #ff9800;
+            background: rgba(255, 152, 0, 0.1);
+        }
+        
+        .test-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .test-buttons .button {
+            margin-bottom: 0;
+            padding: 10px 8px;
+            font-size: 12px;
+        }
+        
+        .icon {
+            font-size: 16px;
+        }
+        
+        .loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid white;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        .button.loading {
+            color: transparent;
+        }
+        
+        .button.loading .loading {
+            display: block;
+        }
+        
+        /* Estilos para los timers */
+        .timer-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .timer-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+        
+        .timer-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .timer-label {
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .timer-countdown {
+            font-size: 16px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            color: #4CAF50;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .timer-countdown.quality {
+            color: #2196F3;
+        }
+        
+        .timer-status {
+            font-size: 11px;
+            opacity: 0.8;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Twitch Extension</h1>
+            <p>Control de Volumen y Calidad</p>
+        </div>
+        
+        <div id="status" class="status" style="display: none;"></div>
+        
+        <!-- Configuración de Timers -->
+        <div class="section">
+            <h3><span class="icon">⏰</span> Configuración de Timers</h3>
+            
+            <div class="config-group">
+                <label for="volumeTimerMin">Timer Volumen - Mínimo (minutos):</label>
+                <input type="range" id="volumeTimerMin" min="1" max="60" value="2">
+                <div class="time-display" id="volumeTimerMinDisplay">2 minutos</div>
+            </div>
+            
+            <div class="config-group">
+                <label for="volumeTimerMax">Timer Volumen - Máximo (minutos):</label>
+                <input type="range" id="volumeTimerMax" min="5" max="180" value="30">
+                <div class="time-display" id="volumeTimerMaxDisplay">30 minutos</div>
+            </div>
+            
+            <div class="config-group">
+                <label for="qualityTimerMin">Timer Calidad - Mínimo (minutos):</label>
+                <input type="range" id="qualityTimerMin" min="10" max="120" value="30">
+                <div class="time-display" id="qualityTimerMinDisplay">30 minutos</div>
+            </div>
+            
+            <div class="config-group">
+                <label for="qualityTimerMax">Timer Calidad - Máximo (horas):</label>
+                <input type="range" id="qualityTimerMax" min="1" max="8" value="3">
+                <div class="time-display" id="qualityTimerMaxDisplay">3 horas</div>
+            </div>
+            
+            <button class="button button-primary" id="saveConfig">
+                <span class="icon">💾</span> Guardar Configuración
+                <div class="loading"></div>
+            </button>
+        </div>
+        
+        <!-- Timers Activos -->
+        <div class="section">
+            <h3><span class="icon">⏰</span> Timers Activos</h3>
+            <div id="timerDisplay" class="timer-display">
+                <div class="timer-item">
+                    <div class="timer-label">
+                        <span>🔊</span> Próximo cambio de volumen
+                    </div>
+                    <div id="volumeTimer" class="timer-countdown">--:--</div>
+                </div>
+                <div class="timer-item">
+                    <div class="timer-label">
+                        <span>🎥</span> Próximo cambio de calidad
+                    </div>
+                    <div id="qualityTimer" class="timer-countdown quality">--:--</div>
+                </div>
+                <div id="timerStatus" class="timer-status">
+                    Inicializando timers...
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado Actual -->
+        <div class="section">
+            <h3><span class="icon">📊</span> Estado Actual</h3>
+            <div id="currentStatus">
+                <p>Cargando estado...</p>
+            </div>
+            <button class="button button-secondary" id="refreshStatus">
+                <span class="icon">🔄</span> Actualizar Estado
+                <div class="loading"></div>
+            </button>
+        </div>
+        
+        <!-- Tests -->
+        <div class="section">
+            <h3><span class="icon">🧪</span> Pruebas y Testing</h3>
+            
+            <button class="button button-test" id="runFullTest">
+                <span class="icon">🚀</span> Ejecutar Test Completo
+                <div class="loading"></div>
+            </button>
+            
+            <div class="test-buttons">
+                <button class="button button-warning" id="testUnmute">
+                    <span class="icon">🔊</span> Test Desmuteo
+                    <div class="loading"></div>
+                </button>
+                
+                <button class="button button-warning" id="testVolume">
+                    <span class="icon">🎚️</span> Test Volumen
+                    <div class="loading"></div>
+                </button>
+                
+                <button class="button button-warning" id="testQuality">
+                    <span class="icon">🎥</span> Test Calidad
+                    <div class="loading"></div>
+                </button>
+                
+                <button class="button button-warning" id="debugInfo">
+                    <span class="icon">🔍</span> Debug Info
+                    <div class="loading"></div>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Acciones Rápidas -->
+        <div class="section">
+            <h3><span class="icon">⚡</span> Acciones Rápidas</h3>
+            
+            <button class="button button-primary" id="forceUnmute">
+                <span class="icon">🔓</span> Forzar Desmuteo Ahora
+                <div class="loading"></div>
+            </button>
+            
+            <button class="button button-secondary" id="resetTimers">
+                <span class="icon">🔄</span> Reiniciar Timers
+                <div class="loading"></div>
+            </button>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>
